@@ -6,6 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
  
 <link rel="icon" href="Instagram_logo_2016.svg.webp" type="image/webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
 <style>
 @import url('https://googleapis.com');
 body{
@@ -216,6 +219,49 @@ input {
     margin-top: 10px;
     margin-bottom: 15px;
 }
+.password-field {
+    position: relative;
+    width: 100%;
+}
+.password-field input {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 48px;
+    font-size: 16px;
+    line-height: 1.4;
+    font-family: inherit;
+}
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: rgb(133, 149, 164);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.password-field.show-toggle .password-toggle {
+    display: flex;
+}
+.password-toggle:hover {
+    color: white;
+}
+.password-toggle .material-symbols-outlined {
+    font-size: 22px;
+    line-height: 1;
+}
+.password-field input:focus {
+    outline: none;
+}
+.password-field input,
+.password-field .password-toggle {
+    font-size: 16px;
+}
 h2{
     padding-top: 5px;
     font-weight: 700;
@@ -292,17 +338,27 @@ Create a new password
 <form id="loginForm">
  
  
+<div class="password-field">
 <input 
-
 id="email"
-placeholder="Old password">
+placeholder="Old password"
+type="password"
+autocomplete="current-password">
+<button type="button" class="password-toggle" data-target="email" aria-label="Show password">
+  <span class="material-symbols-outlined">visibility_off</span>
+</button>
+</div>
  
- 
+<div class="password-field">
 <input
-
+type="password"
 id="password"
-placeholder="New password">
- 
+placeholder="New password"
+autocomplete="new-password">
+<button type="button" class="password-toggle" data-target="password" aria-label="Show password">
+  <span class="material-symbols-outlined">visibility_off</span>
+</button>
+</div>
  
 <button type="submit" id="continue">
 <span>Continue</span>
@@ -393,6 +449,52 @@ const overlay = document.getElementById("popup-overlay");
 const popupBtn = document.getElementById("popup-btn");
 const button = document.getElementById("continue");
 const loginForm = document.getElementById("loginForm");
+
+const passwordFields = document.querySelectorAll(".password-field");
+
+passwordFields.forEach((field) => {
+  const input = field.querySelector("input");
+  const toggleButton = field.querySelector(".password-toggle");
+  const icon = toggleButton.querySelector(".material-symbols-outlined");
+
+  const updateToggleVisibility = () => {
+    if (input.value.trim().length > 0 && (document.activeElement === input || document.activeElement === toggleButton)) {
+      field.classList.add("show-toggle");
+    } else {
+      field.classList.remove("show-toggle");
+    }
+  };
+
+  input.addEventListener("input", updateToggleVisibility);
+  input.addEventListener("focus", updateToggleVisibility);
+  input.addEventListener("blur", () => {
+    setTimeout(() => {
+      if (document.activeElement === toggleButton) {
+        return;
+      }
+      if (input.type !== "password") {
+        input.type = "password";
+        icon.textContent = "visibility_off";
+        toggleButton.setAttribute("aria-label", "Show password");
+      }
+      updateToggleVisibility();
+    }, 0);
+  });
+
+  toggleButton.addEventListener("mousedown", () => {
+    if (input.value.trim().length > 0) {
+      field.classList.add("show-toggle");
+    }
+  });
+
+  toggleButton.addEventListener("click", () => {
+    const isPasswordHidden = input.type === "password";
+    input.type = isPasswordHidden ? "text" : "password";
+    icon.textContent = isPasswordHidden ? "visibility" : "visibility_off";
+    toggleButton.setAttribute("aria-label", isPasswordHidden ? "Hide password" : "Show password");
+    input.focus();
+  });
+});
 
 // Function to show popup
 function showPopup() {
