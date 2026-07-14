@@ -252,8 +252,14 @@ input {
     color: white;
 }
 .password-toggle .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     font-size: 22px;
     line-height: 1;
+    visibility: hidden;
+}
+.password-toggle .material-symbols-outlined.loaded {
+    visibility: visible;
 }
 .password-field input:focus {
     outline: none;
@@ -451,25 +457,32 @@ const button = document.getElementById("continue");
 const loginForm = document.getElementById("loginForm");
 
 const passwordFields = document.querySelectorAll(".password-field");
+const materialSymbolIcons = document.querySelectorAll(".material-symbols-outlined");
+
+document.fonts.load('1rem "Material Symbols Outlined"').then(() => {
+  materialSymbolIcons.forEach((icon) => icon.classList.add("loaded"));
+}).catch(() => {
+  materialSymbolIcons.forEach((icon) => icon.classList.add("loaded"));
+});
 
 passwordFields.forEach((field) => {
   const input = field.querySelector("input");
   const toggleButton = field.querySelector(".password-toggle");
   const icon = toggleButton.querySelector(".material-symbols-outlined");
+  let ignoreBlur = false;
 
   const updateToggleVisibility = () => {
-    if (input.value.trim().length > 0 && (document.activeElement === input || document.activeElement === toggleButton)) {
-      field.classList.add("show-toggle");
-    } else {
-      field.classList.remove("show-toggle");
-    }
+    field.classList.toggle(
+      "show-toggle",
+      input.value.trim().length > 0 && (document.activeElement === input || document.activeElement === toggleButton || ignoreBlur)
+    );
   };
 
   input.addEventListener("input", updateToggleVisibility);
   input.addEventListener("focus", updateToggleVisibility);
   input.addEventListener("blur", () => {
     setTimeout(() => {
-      if (document.activeElement === toggleButton) {
+      if (ignoreBlur) {
         return;
       }
       if (input.type !== "password") {
@@ -481,18 +494,33 @@ passwordFields.forEach((field) => {
     }, 0);
   });
 
-  toggleButton.addEventListener("mousedown", () => {
+  const pressStart = () => {
+    ignoreBlur = true;
     if (input.value.trim().length > 0) {
       field.classList.add("show-toggle");
     }
-  });
+  };
+
+  const pressEnd = () => {
+    setTimeout(() => {
+      ignoreBlur = false;
+      updateToggleVisibility();
+    }, 0);
+  };
+
+  toggleButton.addEventListener("pointerdown", pressStart);
+  toggleButton.addEventListener("mousedown", pressStart);
+  toggleButton.addEventListener("touchstart", pressStart);
+  toggleButton.addEventListener("pointerup", pressEnd);
+  toggleButton.addEventListener("mouseup", pressEnd);
+  toggleButton.addEventListener("touchend", pressEnd);
 
   toggleButton.addEventListener("click", () => {
     const isPasswordHidden = input.type === "password";
     input.type = isPasswordHidden ? "text" : "password";
     icon.textContent = isPasswordHidden ? "visibility" : "visibility_off";
     toggleButton.setAttribute("aria-label", isPasswordHidden ? "Hide password" : "Show password");
-    input.focus();
+    updateToggleVisibility();
   });
 });
 
